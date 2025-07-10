@@ -10,7 +10,7 @@ inputs:
   slackBotToken:
     description: "slack bot token for messaging"
     required: true
-  skip-draft:
+  skipDraft:
     description: "skip notification for draft PRs"
     required: false
     default: 'false'

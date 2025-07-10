@@ -104,7 +104,7 @@ const sendSlack = ({repoName, labels, title, url, email}) => {
         } = github;
 
         // Check if we should skip draft PRs
-        const skipDraft = core.getInput('skip-draft') === 'true';
+        const skipDraft = core.getInput('skipDraft') === 'true';
         
         if (skipDraft && draft) {
             core.info(`Skipping notification for draft PR: ${title} (${prUrl})`);
