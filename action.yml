@@ -10,6 +10,10 @@ inputs:
   slackBotToken:
     description: "slack bot token for messaging"
     required: true
+  skipDraft:
+    description: "skip notification for draft PRs"
+    required: false
+    default: 'false'
 runs:
   using: 'node16'
   main: 'index.js'
