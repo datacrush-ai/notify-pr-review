@@ -44,17 +44,35 @@ async function fetchUser(url) {
   return data;
 }
 
-// 리바이 톤 블록
 function buildBlocks({ repoName, labels, title, url, mention }) {
   const D0 = 'D-0';
   const d0exists = (labels || []).some((l) => l.name === D0);
+
+  // 헤더 멘트 (랜덤)
+  const headerVariants = [
+    `📢 ${mention} 리뷰 요청이다. 지체하지 말고 바로 확인해라.`,
+    `📢 ${mention} 시간 끌면 일정이 무너진다. 지금 당장 리뷰해라.`,
+    `📢 ${mention} 조사병단답게 움직여라. 심장을 바쳐라.`,
+    `📢 ${mention} 게을러지지 마라. 확인하고 대응해라.`,
+    `📢 ${mention} 리뷰가 밀려 있다. 먼저 처리해라.`
+  ];
+  const headerText = headerVariants[Math.floor(Math.random() * headerVariants.length)];
+
+  // 하단 컨텍스트 멘트 (랜덤)
+  const contextVariants = [
+    '⚠️ 리뷰를 미루면 머지와 릴리스가 늦어진다. 변명 금지, 즉시 피드백해라.',
+    '⚠️ 일정은 기다려주지 않는다. 끝낼 수 있을 때 끝내라.',
+    '⚠️ 결론을 미루지 마라. 승인하든, 수정을 요구하든 지금 결정해라.',
+    '⚠️ 조사병단, 임무에 집중해라. 심장을 바쳐라.'
+  ];
+  const contextText = contextVariants[Math.floor(Math.random() * contextVariants.length)];
 
   const blocks = [
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `📢 ${mention} 리뷰 요청이다. 지체하지 말고 바로 확인해라.`
+        text: headerText
       }
     },
     {
@@ -77,22 +95,23 @@ function buildBlocks({ repoName, labels, title, url, mention }) {
     });
   }
 
-  if (d0exists) {
-    blocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `*⚠️ \`${D0}\` 긴급 PR이다. 지금 처리해라.*`
-      }
-    });
-  }
+  // D-0 긴급 멘트가 필요하면 아래 주석 해제
+  // if (d0exists) {
+  //   blocks.push({
+  //     type: 'section',
+  //     text: {
+  //       type: 'mrkdwn',
+  //       text: `*⚠️ \`${D0}\` 긴급 PR이다. 지금 처리해라.*`
+  //     }
+  //   });
+  // }
 
   blocks.push({
     type: 'context',
     elements: [
       {
         type: 'mrkdwn',
-        text: '⚠️ 리뷰를 미루면 머지와 릴리스가 늦어진다. 변명 금지, 즉시 피드백해라.'
+        text: contextText
       }
     ]
   });
@@ -144,24 +163,15 @@ function buildBlocks({ repoName, labels, title, url, mention }) {
     core.notice(`Sender: ${sender.login}, Receiver: ${login}, PR: ${prUrl}`);
 
     let mention = null;
-
+     
     // 1) 매핑 우선 (정확 멘션)
     if (map[login]) {
       mention = `<@${map[login]}>`;
       core.info(`Mapped '${login}' -> ${mention}`);
     } else {
-      // 2) Fallback: GitHub 공개 이메일로 로컬파트 추정(실제 멘션 실패 가능성)
-      const { email } = await fetchUser(url);
-      if (email) {
-        const [name] = email.split('@');
-        mention = `<@${name}>`;
-        core.warning(
-          `No mapping for '${login}'. Fallback to '<@${name}>' (may fail if Slack handle != local-part)`
-        );
-      } else {
-        core.warning(`No mapping/public email for '${login}'. Skip sending.`);
-        return;
-      }
+      // 2) Fallback: GitHub 로그인으로 멘션 시도
+      mention = `<@${login}>`;
+      core.warning(`No mapping for '${login}'. Fallback to '<@${login}>'`);
     }
 
     const res = await slack.post('/chat.postMessage', {
