@@ -1,4 +1,4 @@
-// Notify PR Review (team-channel + shared mapping)
+// Notify PR Review (team-channel + shared mapping, Levi tone)
 // Forked customization
 // Apache-2.0
 
@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 /** ===== 팀별 커스텀: 채널명/매핑 파일 경로만 수정 ===== */
-const CHANNEL = '#뷰링고-fe-github';                 // 팀 채널 고정
+const CHANNEL = 'C09EEQM43GW';           // 팀 채널 고정 (또는 채널 ID 'Cxxxx')
 const MAP_PATH = '.github/slack-map.json';      // 서비스 리포 내 공유 JSON
 /** =============================================== */
 
@@ -44,6 +44,7 @@ async function fetchUser(url) {
   return data;
 }
 
+// 리바이 톤 블록
 function buildBlocks({ repoName, labels, title, url, mention }) {
   const D0 = 'D-0';
   const d0exists = (labels || []).some((l) => l.name === D0);
@@ -53,7 +54,7 @@ function buildBlocks({ repoName, labels, title, url, mention }) {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `📬 ${mention} 새로운 리뷰 요청이 도착했어요! 가능한 빠르게 리뷰에 참여해 주세요:`
+        text: `📢 ${mention} 리뷰 요청이다. 지체하지 말고 바로 확인해라.`
       }
     },
     {
@@ -81,19 +82,17 @@ function buildBlocks({ repoName, labels, title, url, mention }) {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*🚨 \`${D0}\` PR로 매우 긴급한 PR입니다! 지금 바로 리뷰에 참여해 주세요! 🚨*`
+        text: `*⚠️ \`${D0}\` 긴급 PR이다. 지금 처리해라.*`
       }
     });
   }
 
-  blocks.push({ type: 'divider' });
   blocks.push({
     type: 'context',
     elements: [
       {
         type: 'mrkdwn',
-        text:
-          '💪 코드 리뷰는 품질 향상과 버그 감소, 지식 공유/협업에 핵심입니다.\n🙏 적극적인 참여를 부탁드립니다.'
+        text: '⚠️ 리뷰를 미루면 머지와 릴리스가 늦어진다. 변명 금지, 즉시 피드백해라.'
       }
     ]
   });
@@ -126,11 +125,14 @@ function buildBlocks({ repoName, labels, title, url, mention }) {
     if (!requestedReviewer) {
       const teamName = requestedTeam?.name || 'unknown-team';
       const mention = `*${teamName}*`;
-      await slack.post('/chat.postMessage', {
+      const res = await slack.post('/chat.postMessage', {
         channel: CHANNEL,
-        text: '리뷰 요청',
+        text: '리뷰 요청이다. 바로 확인해라.',
         blocks: buildBlocks({ repoName, labels, title, url: prUrl, mention })
       });
+      if (!res.data?.ok) {
+        throw new Error(`Slack error: ${res.data?.error || 'unknown_error'} (channel=${CHANNEL})`);
+      }
       core.notice(`Sent team review notice for ${teamName}`);
       return;
     }
@@ -162,11 +164,14 @@ function buildBlocks({ repoName, labels, title, url, mention }) {
       }
     }
 
-    await slack.post('/chat.postMessage', {
+    const res = await slack.post('/chat.postMessage', {
       channel: CHANNEL,
-      text: '리뷰 요청',
+      text: '리뷰 요청이다. 지체 없이 확인해라.',
       blocks: buildBlocks({ repoName, labels, title, url: prUrl, mention })
     });
+    if (!res.data?.ok) {
+      throw new Error(`Slack error: ${res.data?.error || 'unknown_error'} (channel=${CHANNEL})`);
+    }
 
     core.notice('Successfully sent');
   } catch (e) {
