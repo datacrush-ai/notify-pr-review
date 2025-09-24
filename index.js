@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 /** ===== 팀별 커스텀: 채널명/매핑 파일 경로만 수정 ===== */
-const CHANNEL = 'C09EEQM43GW';           // 팀 채널 고정 (또는 채널 ID 'Cxxxx')
+const CHANNEL = 'C09HMH5CHS4';           // 팀 채널 고정 (또는 채널 ID 'Cxxxx')
 const MAP_PATH = '.github/slack-map.json';      // 서비스 리포 내 공유 JSON
 /** =============================================== */
 
