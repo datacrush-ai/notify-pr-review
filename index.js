@@ -96,15 +96,15 @@ function buildBlocks({ repoName, labels, title, url, mention }) {
   }
 
   // D-0 긴급 멘트가 필요하면 아래 주석 해제
-  // if (d0exists) {
-  //   blocks.push({
-  //     type: 'section',
-  //     text: {
-  //       type: 'mrkdwn',
-  //       text: `*⚠️ \`${D0}\` 긴급 PR이다. 지금 처리해라.*`
-  //     }
-  //   });
-  // }
+  if (d0exists) {
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*⚠️ \`${D0}\` 긴급 PR이다. 지금 처리해라.*`
+      }
+    });
+  }
 
   blocks.push({
     type: 'context',
